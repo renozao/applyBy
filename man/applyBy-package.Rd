@@ -17,6 +17,10 @@
   License: \tab GPL (>= 2)\cr LazyLoad: \tab yes\cr }
 }
 \examples{
+\dontshow{# roxygen generated flag
+options(R_CHECK_RUNNING_EXAMPLES_=TRUE)
+}
+
 x <- matrix(runif(32), ncol = 4)
 g.row <- gl(2, 4)
 g.col <- gl(2, 2)

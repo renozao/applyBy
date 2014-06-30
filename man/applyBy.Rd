@@ -145,6 +145,10 @@
   defined by a factor.
 }
 \examples{
+\dontshow{# roxygen generated flag
+options(R_CHECK_RUNNING_EXAMPLES_=TRUE)
+}
+
 #----------
 # applyBy.matrix
 #----------
@@ -157,14 +161,14 @@ b <- applyBy(x, fc, 1L, rowSums)
 b
 # or
 balt <- rowApplyBy(x, fc, rowSums)
-identical(b, balt)
+stopifnot(identical(b, balt))
 
 # by groups of rows
 fr <- gl(3, 4)
 b <- applyBy(x, fr, 2L, colSums)
 # or
 balt <- colApplyBy(x, fr, colSums)
-identical(b, balt)
+stopifnot(identical(b, balt))
 
 #----------
 # applyBy.ExpressionSet
