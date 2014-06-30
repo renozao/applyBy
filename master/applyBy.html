@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+<title>applyBy. applyBy 1.0.2</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="">
+
+<!-- bootstrap css -->
+<link href="css/bootstrap.css" rel="stylesheet">
+<link href="css/bootstrap-responsive.css" rel="stylesheet">
+<!-- highlighting css -->
+<link href="css/highlight.css" rel="stylesheet">
+<!-- custom css -->
+<link href="css/staticdocs.css" rel="stylesheet">
+<!-- knitr files -->
+<script src="js/highlight.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<!-- bootstrap javascript -->
+<script src="js/jquery.min.js"></script>
+<script src="js/bootstrap.min.js"></script>
+<!-- d3 word cloud -->
+<script src="js/d3.v3.min.js"></script>
+<script src="js/d3.layout.cloud.js"></script>
+  </head>
+
+  <body>
+    <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+  <!-- Brand and toggle get grouped for better mobile display -->
+  <div class="navbar-header">
+    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
+      <span class="sr-only">Toggle navigation</span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+    <a class="navbar-brand" href="index.html">applyBy</a>
+  </div>
+
+  <!-- Collect the nav links, forms, and other content for toggling -->
+  <div class="collapse navbar-collapse navbar-ex1-collapse">
+    <ul class="nav navbar-nav">
+	  <li><a href="PAGE-MAN.html"><span class="glyphicon glyphicon-home"></span> Index</a></li>
+    </ul>
+    <!-- <form class="navbar-form navbar-left" role="search">
+      <div class="form-group">
+        <input type="text" class="form-control" placeholder="Search">
+      </div>
+      <button type="submit" class="btn btn-default">Submit</button>
+    </form>--> 
+    <ul class="nav navbar-nav navbar-right">
+      <li><p class="navbar-text">
+      <span style="font-size:14px" class="label label-primary">Version&nbsp;1.0.2</span>
+      &nbsp;</p></li>
+    </ul>
+  </div><!-- /.navbar-collapse -->
+</nav>
+
+    <div class="container">
+      <header>
+        
+      </header>
+      
+      <h1>Group Apply</h1>
+
+<div class="row">
+  <div class="span8">
+    <div class="description">
+      <h2>Description</h2>
+      
+      <p><p><code>appplyBy</code> is an S3 generic function that applies a
+  given function to sub-matrices of a matrix-like object,
+  which are generated according to a factor that defines
+  groups rows or columns.</p>
+<p><code>applyBy.matrix</code> is a wrapper around
+  <code><a href='http://www.inside-r.org/r-doc/matrixStats/rowAvgsPerColSet.matrix'>colAvgsPerRowSet</a></code>, which make
+  the computation really fast, but requires somehow
+  cumbersome matrix specifications for the groups of
+  columns or rows. The wrapper builds the arguments for the
+  particular case where the groups are defined by a factor.</p>
+<p>A method is provided for
+  <code><a href='http://www.inside-r.org/r-doc/Biobase/class.ExpressionSet'>ExpressionSet</a></code> objects, which
+  preserve sample and feature annotations. Moreover it
+  allows directly passing names of feature/sample
+  annotation -- factor -- variables in argument <code>BY</code>
+  (see examples).</p>
+<p><code>rowApplyBy</code> applies a function to rows of
+  sub-matrices whose columns are defined by a factor.</p>
+<p><code>rowApplyBy</code> applies a function to columns of
+  sub-matrices whose rows are defined by a factor.</p>
+<p><code>col<STAT>By</code> computes for each column a given
+  statistic within separate groups of rows, which are
+  defined by a factor.</p>
+<p><code>row<STAT>By</code> computes for each row a given
+  statistic within separate groups of columns, which are
+  defined by a factor.</p></p>
+  
+    </div>
+    
+    <h2>Usage</h2>
+    <pre>applyBy(x, ...)
+
+<span class="label label-primary">S3</span> (matrix)
+`applyBy`(x, BY, MARGIN, FUN, W = NULL, ..., DROP = FALSE)
+
+<span class="label label-primary">S3</span> (ExpressionSet)
+`applyBy`(x, BY, MARGIN, ..., ANNOTATIONS = TRUE)
+
+<span class="label label-primary">S3</span> (numeric)
+`applyBy`(x, BY, MARGIN, ...)
+
+rowApplyBy(x, BY, FUN, ...)
+
+colApplyBy(x, BY, FUN, ...)
+
+colSumsBy(x, BY, ...)
+
+rowSumsBy(x, BY, ...)
+
+rowMeansBy(x, BY, ...)
+
+colMeansBy(x, BY, ...)
+
+rowMediansBy(x, BY, ...)
+
+colMediansBy(x, BY, ...)
+
+rowMaxsBy(x, BY, ...)
+
+colMaxsBy(x, BY, ...)
+
+rowMinsBy(x, BY, ...)
+
+colMinsBy(x, BY, ...)</pre>
+    
+    <h2>Arguments</h2>
+    <dl>
+      <dt>x</dt>
+      <dd>matrix-like object on which <code><a href='http://www.inside-r.org/r-doc/base/apply'>apply</a></code>
+  can be called.</dd>
+      <dt>BY</dt>
+      <dd>factor or object coerced to a factor, that
+  defines the groups within which the function <code>FUN</code>
+  is applied.
+
+  If <code>x</code> is an ExpressionSet object, then <code>BY</code>
+  can be the names of a sample (resp. feature) annotation
+  variable if <code>MARGIN=1</code> (resp. <code>MARGIN=2L</code>) (see
+  examples).</dd>
+      <dt>MARGIN</dt>
+      <dd>margin along which the function <code>FUN</code>
+  is applied: 1L for rows, 2L for columns.</dd>
+      <dt>FUN</dt>
+      <dd>function to apply to each sub-matrix that
+  contains the rows/columns defined by each level of
+  argument <code>BY</code>. It must be a function that takes a
+  matrix as its first argument and returns a vector of
+  length the dimension of margin <code>MARGIN</code> of
+  <code>x</code>.</dd>
+      <dt>...</dt>
+      <dd>extra parameters passed to <code>FUN</code>.</dd>
+      <dt>DROP</dt>
+      <dd>logical that indicates if absent levels
+  should be removed from the result matrix, or appear as
+  0-filled rows/columns.
+
+  If <code>BY</code> is a list of character indexes, then
+  <code>DROP=FALSE</code> will complete the list with any missing
+  index, so that the corresponding rows/columns form
+  singletons. This means that these data will be passed as
+  row/column vectors to the aggregation function
+  <code>FUN</code>.</dd>
+      <dt>ANNOTATIONS</dt>
+      <dd>logical that indicates if
+  samples/feature annotations should be kept, when the
+  input data is an <code><a href='http://www.inside-r.org/r-doc/Biobase/class.ExpressionSet'>ExpressionSet</a></code>
+  object. Currently, if <code>TRUE</code>: <ul>
+<li> if
+  codeMARGIN=1L, then feature annotations are kept
+  unchanged, and phenotypic sample annotations are
+  discarded. </li>
+<li> if codeMARGIN=2L, then phenotypic
+  sample annotations are kept unchanged, and feature
+  annotations are discarded. </li>
+</ul>
+
+
+  In any case, the value of slot <code>annotation</code> (i.e.
+  the annotation package), is passed on to the result
+  object.</dd>
+      <dt>W</dt>
+      <dd>An optional <code><a href='http://www.inside-r.org/r-doc/base/numeric'>numeric</a></code> NxM
+  <code><a href='http://www.inside-r.org/r-doc/base/matrix'>matrix</a></code> of weights.</dd>
+    </dl>
+    
+    <div class="Value">
+      <h2>Value</h2>
+      
+      <p>The result is a matrix or an <code>ExpressionSet</code> object
+  whose margin's dimension <code>MARGIN</code> is equal the same
+  margin's dimension in <code>x</code>, and the other to the
+  number of levels in <code>BY</code>.</p>
+  
+    </div>
+    
+    <h2 id="examples">Examples</h2>
+    <pre><code class="r">
+
+#----------
+# applyBy.matrix
+#----------
+# random data matrix
+x &lt;- matrix(runif(12 * 6), 12, 6)
+
+# by groups of columns
+fc &lt;- gl(2, 3)
+b &lt;- applyBy(x, fc, 1L, rowSums)
+b
+</code></pre>
+
+<pre><code>##            1      2
+##  [1,] 1.0567 1.1015
+##  [2,] 0.8837 0.7723
+##  [3,] 1.2848 1.6862
+##  [4,] 0.7353 1.6193
+##  [5,] 1.5508 1.0550
+##  [6,] 2.0814 0.9970
+##  [7,] 2.1615 1.4238
+##  [8,] 1.8521 1.5515
+##  [9,] 1.8255 2.3856
+## [10,] 2.3307 1.6440
+## [11,] 2.3113 0.4569
+## [12,] 2.0469 1.4652
+</code></pre>
+
+<pre><code class="r"># or
+balt &lt;- rowApplyBy(x, fc, rowSums)
+stopifnot(identical(b, balt))
+
+# by groups of rows
+fr &lt;- gl(3, 4)
+b &lt;- applyBy(x, fr, 2L, colSums)
+# or
+balt &lt;- colApplyBy(x, fr, colSums)
+stopifnot(identical(b, balt))
+
+#----------
+# applyBy.ExpressionSet
+#----------
+## Method for apply directly to ExpressionSet objects
+
+library(Biobase)
+</code></pre>
+
+<pre><code>## Loading required package: BiocGenerics
+## Loading required package: parallel
+## 
+## Attaching package: &#39;BiocGenerics&#39;
+## 
+## The following objects are masked from &#39;package:parallel&#39;:
+## 
+##     clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+##     clusterExport, clusterMap, parApply, parCapply, parLapply,
+##     parLapplyLB, parRapply, parSapply, parSapplyLB
+## 
+## The following object is masked from &#39;package:stats&#39;:
+## 
+##     xtabs
+## 
+## The following objects are masked from &#39;package:base&#39;:
+## 
+##     anyDuplicated, append, as.data.frame, as.vector, cbind,
+##     colnames, do.call, duplicated, eval, evalq, Filter, Find, get,
+##     intersect, is.unsorted, lapply, Map, mapply, match, mget,
+##     order, paste, pmax, pmax.int, pmin, pmin.int, Position, rank,
+##     rbind, Reduce, rep.int, rownames, sapply, setdiff, sort,
+##     table, tapply, union, unique, unlist
+## 
+## Welcome to Bioconductor
+## 
+##     Vignettes contain introductory material; view with
+##     &#39;browseVignettes()&#39;. To cite Bioconductor, see
+##     &#39;citation(&quot;Biobase&quot;)&#39;, and for packages &#39;citation(&quot;pkgname&quot;)&#39;.
+</code></pre>
+
+<pre><code class="r">x &lt;- ExpressionSet(x, annotation=&#39;abcd.db&#39;)
+y &lt;- rowMinsBy(x, fc)
+y &lt;- colMinsBy(x, fr)
+
+## annotations are conserved/collapsed
+pData(x) &lt;- data.frame(Group=fc, Sample=letters[1:ncol(x)])
+pData(x)
+</code></pre>
+
+<pre><code>##   Group Sample
+## 1     1      a
+## 2     1      b
+## 3     1      c
+## 4     2      d
+## 5     2      e
+## 6     2      f
+</code></pre>
+
+<pre><code class="r">fData(x) &lt;- data.frame(ENTREZID=fr, Gene=letters[nrow(x):1])
+fData(x)
+</code></pre>
+
+<pre><code>##    ENTREZID Gene
+## 1         1    l
+## 2         1    k
+## 3         1    j
+## 4         1    i
+## 5         2    h
+## 6         2    g
+## 7         2    f
+## 8         2    e
+## 9         3    d
+## 10        3    c
+## 11        3    b
+## 12        3    a
+</code></pre>
+
+<pre><code class="r"># keep feature annotations, collapse sample annotations
+y &lt;- rowMinsBy(x, &#39;Group&#39;)
+pData(y)
+</code></pre>
+
+<pre><code>##   Group Sample
+## 1     1      a
+## 2     2      d
+</code></pre>
+
+<pre><code class="r">fData(y)
+</code></pre>
+
+<pre><code>##    ENTREZID Gene
+## 1         1    l
+## 2         1    k
+## 3         1    j
+## 4         1    i
+## 5         2    h
+## 6         2    g
+## 7         2    f
+## 8         2    e
+## 9         3    d
+## 10        3    c
+## 11        3    b
+## 12        3    a
+</code></pre>
+
+<pre><code class="r"># keep sample annotations, collapse feature annotations
+y &lt;- colMinsBy(x, &#39;ENTREZID&#39;)
+pData(y)
+</code></pre>
+
+<pre><code>##   Group Sample
+## 1     1      a
+## 2     1      b
+## 3     1      c
+## 4     2      d
+## 5     2      e
+## 6     2      f
+</code></pre>
+
+<pre><code class="r">fData(y)
+</code></pre>
+
+<pre><code>##   ENTREZID Gene
+## 1        1    l
+## 2        2    h
+## 3        3    d
+</code></pre>
+
+<pre><code class="r">#----------
+# applyBy.numeric
+#----------
+x &lt;- runif(12)
+# 3 groups of 4 elements
+g &lt;- gl(3, 4)
+g
+</code></pre>
+
+<pre><code>##  [1] 1 1 1 1 2 2 2 2 3 3 3 3
+## Levels: 1 2 3
+</code></pre>
+
+<pre><code class="r"># row means ~&gt; row matrix with 3 columns
+a &lt;- rowMeansBy(x, g)
+a
+</code></pre>
+
+<pre><code>##          1      2      3
+## [1,] 0.549 0.4976 0.5573
+</code></pre>
+
+<pre><code class="r"># col means ~&gt; column matrix with 3 rows
+b &lt;- colMeansBy(x, g)
+b
+</code></pre>
+
+<pre><code>##     [,1]
+## 1 0.5490
+## 2 0.4976
+## 3 0.5573
+</code></pre>
+
+<pre><code class="r"># values are identical
+stopifnot( identical(as.numeric(a), as.numeric(b)) )
+</code></pre>
+
+  </div>
+  <div class="span4">
+    <!-- <ul>
+      <li>applyBy</li><li>applyBy.ExpressionSet</li><li>applyBy.matrix</li><li>applyBy.numeric</li><li>colApplyBy</li><li>colMaxsBy</li><li>colMeansBy</li><li>colMediansBy</li><li>colMinsBy</li><li>colSumsBy</li><li>rowApplyBy</li><li>rowMaxsBy</li><li>rowMeansBy</li><li>rowMediansBy</li><li>rowMinsBy</li><li>rowSumsBy</li>
+    </ul>
+    <ul>
+      
+    </ul> -->
+      
+        
+  </div>
+</div>
+      
+      <footer>
+      
+<p>Built by <a href="https://github.com/renozao/staticdocs">staticdocs</a>. Styled with <a href="http://twitter.github.com/bootstrap">bootstrap</a>.</p>
+      </footer>
+    </div>
+  </body>
+</html>

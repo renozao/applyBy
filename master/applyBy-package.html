@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+<title>applyBy-package. applyBy 1.0.2</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="
+  Renaud Gaujoux &lt;a href='mailto:renaud@tx.technion.ac.il'&gt;renaud@tx.technion.ac.il&lt;/a&gt;
+
+  Maintainer: Renaud Gaujoux
+  &lt;a href='mailto:renaud@tx.technion.ac.il'&gt;renaud@tx.technion.ac.il&lt;/a&gt;
+">
+
+<!-- bootstrap css -->
+<link href="css/bootstrap.css" rel="stylesheet">
+<link href="css/bootstrap-responsive.css" rel="stylesheet">
+<!-- highlighting css -->
+<link href="css/highlight.css" rel="stylesheet">
+<!-- custom css -->
+<link href="css/staticdocs.css" rel="stylesheet">
+<!-- knitr files -->
+<script src="js/highlight.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+<!-- bootstrap javascript -->
+<script src="js/jquery.min.js"></script>
+<script src="js/bootstrap.min.js"></script>
+<!-- d3 word cloud -->
+<script src="js/d3.v3.min.js"></script>
+<script src="js/d3.layout.cloud.js"></script>
+  </head>
+
+  <body>
+    <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+  <!-- Brand and toggle get grouped for better mobile display -->
+  <div class="navbar-header">
+    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
+      <span class="sr-only">Toggle navigation</span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+    <a class="navbar-brand" href="index.html">applyBy</a>
+  </div>
+
+  <!-- Collect the nav links, forms, and other content for toggling -->
+  <div class="collapse navbar-collapse navbar-ex1-collapse">
+    <ul class="nav navbar-nav">
+	  <li><a href="PAGE-MAN.html"><span class="glyphicon glyphicon-home"></span> Index</a></li>
+    </ul>
+    <!-- <form class="navbar-form navbar-left" role="search">
+      <div class="form-group">
+        <input type="text" class="form-control" placeholder="Search">
+      </div>
+      <button type="submit" class="btn btn-default">Submit</button>
+    </form>--> 
+    <ul class="nav navbar-nav navbar-right">
+      <li><p class="navbar-text">
+      <span style="font-size:14px" class="label label-primary">Version&nbsp;1.0.2</span>
+      &nbsp;</p></li>
+    </ul>
+  </div><!-- /.navbar-collapse -->
+</nav>
+
+    <div class="container">
+      <header>
+        
+      </header>
+      
+      <h1>Subset-wise apply functions to aggregate rows or columns of matrix-like objects</h1>
+
+<div class="row">
+  <div class="span8">
+    <div class="description">
+      <h2>Description</h2>
+      
+      <p><p>This package defines a function applyBy that enables
+  applying a function along margins of matrix-like objects
+  separately within groups of columns/rows defined by
+  factor(s), e.g., computing aggregated summary statistics.
+  It is essentially a wrapper around functions from the the
+  matrixStats package, which provide very fast alternative
+  implementation to the base aggregate function.</p></p>
+  
+    </div>
+    
+    
+    
+    <div class="Details">
+      <h2>Details</h2>
+      
+      <p><table><tr><td> Package: </td>
+<td> applyBy</td>
+</tr><tr><td> Type: </td>
+<td>
+  Package</td>
+</tr><tr><td> Version: </td>
+<td> 1.0</td>
+</tr><tr><td> Date: </td>
+<td> 2013-11-29</td>
+</tr><tr><td>
+  License: </td>
+<td> GPL (>= 2)</td>
+</tr><tr><td> LazyLoad: </td>
+<td> yes</td>
+</tr></table></p>
+  
+    </div>
+    
+    <h2 id="examples">Examples</h2>
+    <pre><code class="r">
+
+x &lt;- matrix(runif(32), ncol = 4)
+g.row &lt;- gl(2, 4)
+g.col &lt;- gl(2, 2)
+
+rowMeans(x)
+</code></pre>
+
+<pre><code>## [1] 0.3582 0.5311 0.3802 0.3584 0.5198 0.7639 0.6843 0.4416
+</code></pre>
+
+<pre><code class="r">rowMeansBy(x, g.col)
+</code></pre>
+
+<pre><code>##           1      2
+## [1,] 0.3082 0.4081
+## [2,] 0.9198 0.1423
+## [3,] 0.4943 0.2660
+## [4,] 0.4404 0.2763
+## [5,] 0.5318 0.5079
+## [6,] 0.8468 0.6809
+## [7,] 0.7642 0.6044
+## [8,] 0.6608 0.2225
+</code></pre>
+
+<pre><code class="r">colMeansBy(x, g.row)
+</code></pre>
+
+<pre><code>##     [,1]   [,2]   [,3]   [,4]
+## 1 0.6820 0.3994 0.3453 0.2011
+## 2 0.8451 0.5567 0.6071 0.4008
+</code></pre>
+
+  </div>
+  <div class="span4">
+    <!-- <ul>
+      <li>applyBy-package</li>
+    </ul>
+    <ul>
+      <li>package</li>
+    </ul> -->
+      
+    <h2>See also</h2>
+    
+  <code>matrixStats-package</code>,
+  <code>colAvgsPerRowSet</code>,
+  <code>rowAvgsPerColSet</code> , <code><a href='applyBy.html'>applyBy</a></code>
+
+    
+    <h2>Author</h2>
+    
+  Renaud Gaujoux <a href='mailto:renaud@tx.technion.ac.il'>renaud@tx.technion.ac.il</a>
+
+  Maintainer: Renaud Gaujoux
+  <a href='mailto:renaud@tx.technion.ac.il'>renaud@tx.technion.ac.il</a>
+
+    
+  </div>
+</div>
+      
+      <footer>
+      
+<p>Built by <a href="https://github.com/renozao/staticdocs">staticdocs</a>. Styled with <a href="http://twitter.github.com/bootstrap">bootstrap</a>.</p>
+      </footer>
+    </div>
+  </body>
+</html>
