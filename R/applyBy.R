@@ -71,7 +71,6 @@ applyBy <- function(x, ...){
 #' @S3method applyBy matrix 
 #' @importFrom pkgmaker isNumber isString str_out
 #' @importFrom matrixStats colAvgsPerRowSet rowAvgsPerColSet
-#' @importFrom matrixStats colAvgsPerRowSet.matrix rowAvgsPerColSet.matrix
 #' @rdname applyBy 
 #' @examples
 #' 
@@ -84,14 +83,14 @@ applyBy <- function(x, ...){
 #' b
 #' # or
 #' balt <- rowApplyBy(x, fc, rowSums)
-#' identical(b, balt)
+#' stopifnot(identical(b, balt))
 #' 
 #' # by groups of rows
 #' fr <- gl(3, 4)
 #' b <- applyBy(x, fr, 2L, colSums)
 #' # or
 #' balt <- colApplyBy(x, fr, colSums)
-#' identical(b, balt)
+#' stopifnot(identical(b, balt))
 #'  
 applyBy.matrix <- function(x, BY, MARGIN, FUN, W=NULL, ..., DROP=FALSE){
     
