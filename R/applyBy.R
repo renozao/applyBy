@@ -119,7 +119,7 @@ applyBy.matrix <- function(x, BY, MARGIN, FUN, W=NULL, ..., DROP=FALSE){
                     , " some of the indexes do not match any data BY margin names"
                     , " [", str_out(bynames), "].")
         if( anyDuplicated(idx) )
-            stop("Invalid `BY` argument of typ list: it should not contain any duplicated values.")
+            stop("Invalid `BY` argument of type list: it should not contain any duplicated values.")
         
         # complete list with missing levels if necessary
         if( !DROP && is.character(idx) && any(missing_levels <- !bynames %in% idx) ){
