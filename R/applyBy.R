@@ -92,7 +92,7 @@ applyBy <- function(x, ...){
 #' balt <- colApplyBy(x, fr, colSums)
 #' stopifnot(identical(b, balt))
 #'  
-applyBy.matrix <- function(x, BY, MARGIN, FUN, W=NULL, ..., DROP=FALSE){
+applyBy.matrix <- function(x, BY, MARGIN, FUN, W=NULL, ..., DROP=FALSE, DUPS = NULL){
     
     if( !isNumber(MARGIN) ){
         stop("Invalid value for argument 'MARGIN' of class '", class(MARGIN), "': must be a single number (e.g. 1 or 2)")
@@ -118,8 +118,11 @@ applyBy.matrix <- function(x, BY, MARGIN, FUN, W=NULL, ..., DROP=FALSE){
             stop("Invalid `BY` argument of type list [", str_out(idx, use.names = TRUE), "]:"
                     , " some of the indexes do not match any data BY margin names"
                     , " [", str_out(bynames), "].")
-        if( anyDuplicated(idx) )
-            stop("Invalid `BY` argument of type list: it should not contain any duplicated values.")
+        
+        if( hasDUPS <- anyDuplicated(idx) ){
+            if( is.null(DUPS) ) warning("List `BY` contains duplicated indexes: overlapping group values main be correlated.")
+            else if( !isTRUE(DUPS) ) stop("Invalid `BY` argument of type list: it should not contain any duplicated values.")
+        }
         
         # complete list with missing levels if necessary
         if( !DROP && is.character(idx) && any(missing_levels <- !bynames %in% idx) ){
@@ -130,22 +133,29 @@ applyBy.matrix <- function(x, BY, MARGIN, FUN, W=NULL, ..., DROP=FALSE){
         
         # use names as levels
         if( is.null(names(BY)) ) names(BY) <- seq_along(BY)		
-        # subset to the given indexes
-        x <- if( BYMARGIN == 1L ) x[idx, , drop=FALSE] else x[, idx, drop=FALSE]
-        # convert into a factor
-        v <- unlist(mapply(rep, names(BY), sapply(BY, length)))
-        BY <- factor(v, levels=names(BY))
+        
+        if( !hasDUPS ){# convert into a factor
+            # subset to the given indexes
+            x <- if( BYMARGIN == 1L ) x[idx, , drop=FALSE] else x[, idx, drop=FALSE]        
+            v <- rep(names(BY), sapply(BY, length))
+            BY <- factor(v, levels=names(BY))
+        }else if( is.character(idx) ){ # convert to integer indexes
+			BY <- sapply(BY, match, table = bynames, nomatch = 0L, simplify = FALSE)
+		}
     }
     
-    bydim <- dim(x)[BYMARGIN]
-    if( length(BY) != bydim )
-        stop("Invalid value for argument `BY`: length [", length(BY), "] is not equal to the dimension [", bydim, "] of the BY margin [", BYMARGIN, ']')
-    
-    # coerce to factor if necessary
-    if( !is.factor(BY) ) BY <- factor(BY, levels=unique(BY))	
-    
+    # convert non-list specification to a factor
+    if( !is.list(BY) ){
+        bydim <- dim(x)[BYMARGIN]
+        if( length(BY) != bydim )
+            stop("Invalid value for argument `BY`: length [", length(BY), "] is not equal to the dimension [", bydim, "] of the BY margin [", BYMARGIN, ']')
+        
+        # coerce to factor if necessary
+        if( !is.factor(BY) ) BY <- factor(BY, levels=unique(BY))
+        s <- split(1:bydim, BY)
+        
+	}else s <- BY
     # build subset matrix
-    s <- split(1:bydim, BY)
     nm <- max(sapply(s, length))
     S <- matrix(0, nm, length(s))
     colnames(S) <- names(s)
