@@ -63,6 +63,12 @@ applyBy <- function(x, ...){
 #' This means that these data will be passed as row/column vectors to the 
 #' aggregation function \code{FUN}.
 #' 
+#' @param DUPS logical, used when \code{BY} is a list, that indicates 
+#' if overlapping sets are allowed.
+#' Default is to throw a warning if such case is detected.
+#' Using \code{DUPS = TRUE} silence the warning, while \code{DUPS = FALSE}
+#' turns into an error.  
+#' 
 #' @return The result is a matrix or an \code{ExpressionSet} object 
 #' whose margin's dimension \code{MARGIN} is equal the same margin's 
 #' dimension in \code{x}, and the other to the number of levels 
