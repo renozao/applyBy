@@ -33,11 +33,12 @@ applyBy <- function(x, ...){
 #' The method \code{applyBy.matrix} is the work horse function 
 #' that is called by other more user-friendly functions.
 #' 
-#' \code{applyBy.matrix} is a wrapper around \code{\link[matrixStats]{colAvgsPerRowSet}}, 
-#' which make the computation really fast, but requires somehow cumbersome matrix 
-#' specifications for the groups of columns or rows.
-#' The wrapper builds the arguments for the particular case where 
-#' the groups are defined by a factor.
+#' In essence, \code{applyBy.matrix} is a wrapper around \code{\link[matrixStats]{colAvgsPerRowSet}} 
+#' and \code{\link[matrixStats]{rowAvgsPerColSet}} from the \code{\link{matrixStats}} package, 
+#' which makes the computation really fast, but requires somehow cumbersome matrix arguments
+#' to specify the groups of columns or rows.
+#' The wrapper function builds the required arguments for cases where the groups 
+#' are defined by a factor or a list of indexes.
 #' 
 #' @param x matrix-like object on which \code{\link{apply}} can be called.
 #' @param BY factor or object coerced to a factor, that defines the groups within 
@@ -77,6 +78,7 @@ applyBy <- function(x, ...){
 #' @export 
 #' @importFrom pkgmaker isNumber isString str_out
 #' @importFrom matrixStats colAvgsPerRowSet rowAvgsPerColSet
+#' @importFrom stats setNames
 #' @rdname applyBy 
 #' @examples
 #' 
@@ -280,7 +282,16 @@ applyBy.matrix <- function(x, BY, MARGIN, FUN, W=NULL, ..., DROP=FALSE, DUPS = N
 applyBy.ExpressionSet <- function(x, BY, MARGIN, ..., ANNOTATIONS=TRUE){
     
     # convert single character string into annotation variable
-    library(Biobase)
+    if( !requireNamespace('Biobase') ){
+      stop("Could not perform group-apply operation on ExpressionSet object: required package Biobase could not be loaded.")
+    }
+    # load Biobase functions
+    phenoData <- Biobase::phenoData
+    pData <- Biobase::pData
+    featureData <- Biobase::featureData
+    fData <- Biobase::fData
+    varLabels <- Biobase::varLabels
+
     if( isString(BY) ){
         if( MARGIN == 1L ){ # phenotypic variable
             if( !BY %in% varLabels(x) ){
@@ -300,7 +311,7 @@ applyBy.ExpressionSet <- function(x, BY, MARGIN, ..., ANNOTATIONS=TRUE){
     # apply to expression matrix
     .applyBy_BY(TRUE)
     on.exit( .applyBy_BY(NULL) )
-    res <- applyBy(exprs(x), BY=BY, MARGIN=MARGIN, ...)
+    res <- applyBy(Biobase::exprs(x), BY=BY, MARGIN=MARGIN, ...)
     
     # re-wrap into an ExpressionSet objects
     # pass on annotations whenever possible
@@ -319,7 +330,7 @@ applyBy.ExpressionSet <- function(x, BY, MARGIN, ..., ANNOTATIONS=TRUE){
                 df <- pData(x)[irep, , drop = FALSE]
                 # warp into an AnnotatedDataFrame object
                 rownames(df) <- colnames(res)
-                pd <- AnnotatedDataFrame(df)
+                pd <- Biobase::AnnotatedDataFrame(df)
             }
         }else if( MARGIN == 2L ){
             if( nrow(ad <- phenoData(x)) > 0L ) pd <- ad # keep sample annotations
@@ -334,13 +345,13 @@ applyBy.ExpressionSet <- function(x, BY, MARGIN, ..., ANNOTATIONS=TRUE){
                 df <- fData(x)[irep, , drop = FALSE]
                 # warp into an AnnotatedDataFrame object
                 rownames(df) <- rownames(res)
-                fd <- AnnotatedDataFrame(df)
+                fd <- Biobase::AnnotatedDataFrame(df)
             }
         }
     }
     
     # do wrap
-    ca <- call('ExpressionSet', res, annotation=annotation(x))
+    ca <- call('ExpressionSet', res, annotation = Biobase::annotation(x))
     if( !is.null(pd) ) ca$phenoData <- pd
     if( !is.null(fd) ) ca$featureData <- fd
     res <- eval(ca)
