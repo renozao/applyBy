@@ -175,29 +175,34 @@ applyBy.matrix <- function(x, BY, MARGIN, FUN, W=NULL, ..., DROP=FALSE, DUPS = N
     }
     
     # call relevant function from matrixStats
+	.FUN <- FUN
     if( MARGIN == 1L ){
         # prevent bug in matrixStats for row matrix: add dummy column
-        xmat <- if( nrow(x) == 1L ) rbind(x, 0)
-                else if( !nrow(x) ){ # early exit if empty input matrix
-                    x <- x[, 1:ncol(S), drop = FALSE]
-                    colnames(x) <- colnames(S)
-                    return(x)
-                } 
-                else x
+        xmat <- if( nrow(x) == 1L ){
+            .FUN <- function(x, ...) c(FUN(x[-nrow(x), , drop = FALSE], ...), NA)
+            rbind(x, 0)
+            }else if( !nrow(x) ){ # early exit if empty input matrix
+                  x <- x[, 1:ncol(S), drop = FALSE]
+                  colnames(x) <- colnames(S)
+                  return(x)
+              } 
+              else x
         # call
-        res <- rowAvgsPerColSet(X=xmat, S=S, FUN=FUN, W=W, ...)
+        res <- rowAvgsPerColSet(X=xmat, S=S, FUN=.FUN, W=W, ...)
         # remove dummy row
         if( nrow(x) == 1L ) res <- res[-nrow(res), , drop = FALSE]
     }else{
         # prevent bug in matrixStats for column matrix: add dummy column
-        xmat <- if( ncol(x) == 1L ) cbind(x, 0)
-                else if( !ncol(x) ){ # early exit if empty input matrix
+        xmat <- if( ncol(x) == 1L ){
+            .FUN <- function(x, ...) c(FUN(x[, -ncol(x), drop = FALSE], ...), NA)
+            cbind(x, 0)
+            }else if( !ncol(x) ){ # early exit if empty input matrix
                     x <- x[1:ncol(S), , drop = FALSE]
                     rownames(x) <- colnames(S)
                     return(x)
                 } else x 
         # call
-        res <- colAvgsPerRowSet(X=xmat, S=S, FUN=FUN, W=W, ...)
+        res <- colAvgsPerRowSet(X=xmat, S=S, FUN=.FUN, W=W, ...)
         # remove dummy column
         if( ncol(x) == 1L ) res <- res[, -ncol(res), drop = FALSE] 
     }
@@ -367,7 +372,7 @@ applyBy.numeric <- function(x, BY, MARGIN, ...){
     if( MARGIN == 1L ){ 
         applyBy(matrix(x, nrow = 1L), BY = BY, MARGIN = MARGIN, ...)
     }else{
-        applyBy(as.matrix(x), BY = BY, MARGIN = MARGIN, ...)
+        applyBy(matrix(x, ncol = 1L), BY = BY, MARGIN = MARGIN, ...)
     }
 }
 
