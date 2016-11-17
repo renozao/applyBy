@@ -75,6 +75,7 @@ applyBy <- function(x, ...){
 #' dimension in \code{x}, and the other to the number of levels 
 #' in \code{BY}.
 #'
+#' @seealso built-ins
 #' @export 
 #' @importFrom pkgmaker isNumber isString str_out
 #' @importFrom matrixStats colAvgsPerRowSet rowAvgsPerColSet
@@ -405,56 +406,3 @@ rowApplyBy <- function(x, BY, FUN, ...){
 colApplyBy <- function(x, BY, FUN, ...){ 
     applyBy(x, BY=BY, MARGIN=2L, FUN=FUN, ...)
 }
-
-
-
-# generator functions
-.rowApplyByFunction <- function(FUN){
-    function(x, BY, ...){
-        applyBy(x, BY=BY, MARGIN=1L, FUN=FUN, ...)
-    }
-}
-.colApplyByFunction <- function(FUN){
-    function(x, BY, ...){
-        applyBy(x, BY=BY, MARGIN=2L, FUN=FUN, ...)
-    }
-}
-
-#' \code{col<STAT>By} computes for each column a given statistic within separate groups of rows, which are defined by a factor.
-#' @export
-#' @rdname applyBy
-colSumsBy <- .colApplyByFunction(colSums)
-
-#' \code{row<STAT>By} computes for each row a given statistic within separate groups of columns, which are defined by a factor.
-#' @export
-#' @rdname applyBy
-rowSumsBy <- .rowApplyByFunction(rowSums)
-
-#' @export
-#' @rdname applyBy
-rowMeansBy <- .rowApplyByFunction(rowMeans)
-#' @export
-#' @rdname applyBy
-colMeansBy <- .colApplyByFunction(colMeans)
-
-#' @export
-#' @rdname applyBy
-rowMediansBy <- .rowApplyByFunction(matrixStats::rowMedians)
-#' @export
-#' @rdname applyBy
-colMediansBy <- .colApplyByFunction(matrixStats::colMedians)
-
-#' @export
-#' @rdname applyBy
-rowMaxsBy <- .rowApplyByFunction(matrixStats::rowMaxs)
-#' @export
-#' @rdname applyBy
-colMaxsBy <- .colApplyByFunction(matrixStats::colMaxs)
-
-#' @export
-#' @rdname applyBy
-rowMinsBy <- .rowApplyByFunction(matrixStats::rowMins)
-#' @export
-#' @rdname applyBy
-colMinsBy <- .colApplyByFunction(matrixStats::colMins)
-

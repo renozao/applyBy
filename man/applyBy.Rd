@@ -5,17 +5,7 @@
 \alias{applyBy.matrix}
 \alias{applyBy.numeric}
 \alias{colApplyBy}
-\alias{colMaxsBy}
-\alias{colMeansBy}
-\alias{colMediansBy}
-\alias{colMinsBy}
-\alias{colSumsBy}
 \alias{rowApplyBy}
-\alias{rowMaxsBy}
-\alias{rowMeansBy}
-\alias{rowMediansBy}
-\alias{rowMinsBy}
-\alias{rowSumsBy}
 \title{Group Apply}
 \usage{
 applyBy(x, ...)
@@ -30,26 +20,6 @@ applyBy(x, ...)
 rowApplyBy(x, BY, FUN, ...)
 
 colApplyBy(x, BY, FUN, ...)
-
-colSumsBy(x, BY, ...)
-
-rowSumsBy(x, BY, ...)
-
-rowMeansBy(x, BY, ...)
-
-colMeansBy(x, BY, ...)
-
-rowMediansBy(x, BY, ...)
-
-colMediansBy(x, BY, ...)
-
-rowMaxsBy(x, BY, ...)
-
-colMaxsBy(x, BY, ...)
-
-rowMinsBy(x, BY, ...)
-
-colMinsBy(x, BY, ...)
 }
 \arguments{
   \item{x}{matrix-like object on which \code{\link{apply}} can be called.}
@@ -112,11 +82,12 @@ in \code{BY}.
 to sub-matrices of a matrix-like object, which are generated according to
 a factor that defines groups rows or columns.
 
-\code{applyBy.matrix} is a wrapper around \code{\link[matrixStats]{colAvgsPerRowSet}},
-which make the computation really fast, but requires somehow cumbersome matrix
-specifications for the groups of columns or rows.
-The wrapper builds the arguments for the particular case where
-the groups are defined by a factor.
+In essence, \code{applyBy.matrix} is a wrapper around \code{\link[matrixStats]{colAvgsPerRowSet}}
+and \code{\link[matrixStats]{rowAvgsPerColSet}} from the \code{\link{matrixStats}} package,
+which makes the computation really fast, but requires somehow cumbersome matrix arguments
+to specify the groups of columns or rows.
+The wrapper function builds the required arguments for cases where the groups
+are defined by a factor or a list of indexes.
 
 A method is provided for \code{\link[Biobase]{ExpressionSet}} objects,
 which preserve sample and feature annotations.
@@ -128,10 +99,6 @@ are defined by a factor.
 
 \code{rowApplyBy} applies a function to columns of sub-matrices whose rows
 are defined by a factor.
-
-\code{col<STAT>By} computes for each column a given statistic within separate groups of rows, which are defined by a factor.
-
-\code{row<STAT>By} computes for each row a given statistic within separate groups of columns, which are defined by a factor.
 }
 \examples{
 \dontshow{# roxygen generated flag
@@ -193,5 +160,8 @@ b
 
 # values are identical
 stopifnot( identical(as.numeric(a), as.numeric(b)) )
+}
+\seealso{
+  built-ins
 }
 
