@@ -323,13 +323,14 @@ applyBy.ExpressionSet <- function(x, BY, MARGIN, ..., ANNOTATIONS=TRUE){
             if( !is.list(BY) && nrow(ad <- phenoData(x)) > 0L ){
                 # get used BY factor
                 fBY <- .applyBy_BY()
+                new_margin_names <- colnames(res) 
                 # use annotation of first representative of each level
-                irep <- match(colnames(res), as.character(fBY)) # order must match the item names
+                irep <- match(new_margin_names, as.character(fBY)) # order must match the item names
                 # force missing levels to get all NA annotations
                 irep[is.na(irep)] <- nrow(pData(x)) + 1L
                 df <- pData(x)[irep, , drop = FALSE]
                 # warp into an AnnotatedDataFrame object
-                rownames(df) <- colnames(res)
+                rownames(df) <- new_margin_names
                 pd <- Biobase::AnnotatedDataFrame(df)
             }
         }else if( MARGIN == 2L ){
@@ -338,13 +339,14 @@ applyBy.ExpressionSet <- function(x, BY, MARGIN, ..., ANNOTATIONS=TRUE){
             if( !is.list(BY) && nrow(ad <- featureData(x)) > 0L ){
                 # get used BY factor
                 fBY <- .applyBy_BY()
+                new_margin_names <- rownames(res)
                 # use annotation of first representative of each level
-                irep <- match(colnames(res), as.character(fBY)) # order must match the item names
+                irep <- match(new_margin_names, as.character(fBY)) # order must match the item names
                 # force missing levels to get all NA annotations
                 irep[is.na(irep)] <- nrow(fData(x)) + 1L
                 df <- fData(x)[irep, , drop = FALSE]
                 # warp into an AnnotatedDataFrame object
-                rownames(df) <- rownames(res)
+                rownames(df) <- new_margin_names
                 fd <- Biobase::AnnotatedDataFrame(df)
             }
         }
