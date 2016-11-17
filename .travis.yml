@@ -10,4 +10,6 @@ cache: packages
 r:
   - release
   - devel
+bioc_packages:
+  - Biobase
 warnings_are_errors: true
