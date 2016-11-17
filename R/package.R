@@ -14,15 +14,6 @@
 #' matrixStats package, which provide very fast alternative implementation to 
 #' the base aggregate function.
 #' 
-#' \tabular{ll}{
-#' Package: \tab applyBy\cr
-#' Type: \tab Package\cr
-#' Version: \tab 1.0\cr
-#' Date: \tab 2013-11-29\cr
-#' License: \tab GPL (>= 2)\cr
-#' LazyLoad: \tab yes\cr
-#' }
-#'
 #' @author
 #' Renaud Gaujoux \email{renaud@@tx.technion.ac.il}
 #'

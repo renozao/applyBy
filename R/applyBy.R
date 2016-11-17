@@ -74,7 +74,7 @@ applyBy <- function(x, ...){
 #' dimension in \code{x}, and the other to the number of levels 
 #' in \code{BY}.
 #'
-#' @S3method applyBy matrix 
+#' @export 
 #' @importFrom pkgmaker isNumber isString str_out
 #' @importFrom matrixStats colAvgsPerRowSet rowAvgsPerColSet
 #' @rdname applyBy 
@@ -251,7 +251,7 @@ applyBy.matrix <- function(x, BY, MARGIN, FUN, W=NULL, ..., DROP=FALSE, DUPS = N
 #' In any case, the value of slot \code{annotation} (i.e. the annotation package), 
 #' is passed on to the result object.
 #'  
-#' @S3method applyBy ExpressionSet 
+#' @export 
 #' @rdname applyBy
 #' @examples
 #' 
@@ -348,7 +348,7 @@ applyBy.ExpressionSet <- function(x, BY, MARGIN, ..., ANNOTATIONS=TRUE){
     res
 }
 
-#' @S3method applyBy numeric
+#' @export
 #' @rdname applyBy
 #' @examples
 #' 
