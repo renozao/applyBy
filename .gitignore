@@ -1,3 +1,6 @@
+.project
+.settings
+.Rproj.user
 # History files
 .Rhistory
 
