@@ -33,11 +33,12 @@ applyBy <- function(x, ...){
 #' The method \code{applyBy.matrix} is the work horse function 
 #' that is called by other more user-friendly functions.
 #' 
-#' \code{applyBy.matrix} is a wrapper around \code{\link[matrixStats]{colAvgsPerRowSet}}, 
-#' which make the computation really fast, but requires somehow cumbersome matrix 
-#' specifications for the groups of columns or rows.
-#' The wrapper builds the arguments for the particular case where 
-#' the groups are defined by a factor.
+#' In essence, \code{applyBy.matrix} is a wrapper around \code{\link[matrixStats]{colAvgsPerRowSet}} 
+#' and \code{\link[matrixStats]{rowAvgsPerColSet}} from the \code{\link{matrixStats}} package, 
+#' which makes the computation really fast, but requires somehow cumbersome matrix arguments
+#' to specify the groups of columns or rows.
+#' The wrapper function builds the required arguments for cases where the groups 
+#' are defined by a factor or a list of indexes.
 #' 
 #' @param x matrix-like object on which \code{\link{apply}} can be called.
 #' @param BY factor or object coerced to a factor, that defines the groups within 
@@ -63,14 +64,22 @@ applyBy <- function(x, ...){
 #' This means that these data will be passed as row/column vectors to the 
 #' aggregation function \code{FUN}.
 #' 
+#' @param DUPS logical, used when \code{BY} is a list, that indicates 
+#' if overlapping sets are allowed.
+#' Default is to throw a warning if such case is detected.
+#' Using \code{DUPS = TRUE} silence the warning, while \code{DUPS = FALSE}
+#' turns into an error.  
+#' 
 #' @return The result is a matrix or an \code{ExpressionSet} object 
 #' whose margin's dimension \code{MARGIN} is equal the same margin's 
 #' dimension in \code{x}, and the other to the number of levels 
 #' in \code{BY}.
 #'
-#' @S3method applyBy matrix 
+#' @seealso built-ins
+#' @export 
 #' @importFrom pkgmaker isNumber isString str_out
 #' @importFrom matrixStats colAvgsPerRowSet rowAvgsPerColSet
+#' @importFrom stats setNames
 #' @rdname applyBy 
 #' @examples
 #' 
@@ -92,7 +101,7 @@ applyBy <- function(x, ...){
 #' balt <- colApplyBy(x, fr, colSums)
 #' stopifnot(identical(b, balt))
 #'  
-applyBy.matrix <- function(x, BY, MARGIN, FUN, W=NULL, ..., DROP=FALSE){
+applyBy.matrix <- function(x, BY, MARGIN, FUN, W=NULL, ..., DROP=FALSE, DUPS = NULL){
     
     if( !isNumber(MARGIN) ){
         stop("Invalid value for argument 'MARGIN' of class '", class(MARGIN), "': must be a single number (e.g. 1 or 2)")
@@ -118,8 +127,11 @@ applyBy.matrix <- function(x, BY, MARGIN, FUN, W=NULL, ..., DROP=FALSE){
             stop("Invalid `BY` argument of type list [", str_out(idx, use.names = TRUE), "]:"
                     , " some of the indexes do not match any data BY margin names"
                     , " [", str_out(bynames), "].")
-        if( anyDuplicated(idx) )
-            stop("Invalid `BY` argument of typ list: it should not contain any duplicated values.")
+        
+        if( hasDUPS <- anyDuplicated(idx) ){
+            if( is.null(DUPS) ) warning("List `BY` contains duplicated indexes: overlapping group values main be correlated.")
+            else if( !isTRUE(DUPS) ) stop("Invalid `BY` argument of type list: it should not contain any duplicated values.")
+        }
         
         # complete list with missing levels if necessary
         if( !DROP && is.character(idx) && any(missing_levels <- !bynames %in% idx) ){
@@ -130,22 +142,29 @@ applyBy.matrix <- function(x, BY, MARGIN, FUN, W=NULL, ..., DROP=FALSE){
         
         # use names as levels
         if( is.null(names(BY)) ) names(BY) <- seq_along(BY)		
-        # subset to the given indexes
-        x <- if( BYMARGIN == 1L ) x[idx, , drop=FALSE] else x[, idx, drop=FALSE]
-        # convert into a factor
-        v <- unlist(mapply(rep, names(BY), sapply(BY, length)))
-        BY <- factor(v, levels=names(BY))
+        
+        if( !hasDUPS ){# convert into a factor
+            # subset to the given indexes
+            x <- if( BYMARGIN == 1L ) x[idx, , drop=FALSE] else x[, idx, drop=FALSE]        
+            v <- rep(names(BY), sapply(BY, length))
+            BY <- factor(v, levels=names(BY))
+        }else if( is.character(idx) ){ # convert to integer indexes
+			BY <- sapply(BY, match, table = bynames, nomatch = 0L, simplify = FALSE)
+		}
     }
     
-    bydim <- dim(x)[BYMARGIN]
-    if( length(BY) != bydim )
-        stop("Invalid value for argument `BY`: length [", length(BY), "] is not equal to the dimension [", bydim, "] of the BY margin [", BYMARGIN, ']')
-    
-    # coerce to factor if necessary
-    if( !is.factor(BY) ) BY <- factor(BY, levels=unique(BY))	
-    
+    # convert non-list specification to a factor
+    if( !is.list(BY) ){
+        bydim <- dim(x)[BYMARGIN]
+        if( length(BY) != bydim )
+            stop("Invalid value for argument `BY`: length [", length(BY), "] is not equal to the dimension [", bydim, "] of the BY margin [", BYMARGIN, ']')
+        
+        # coerce to factor if necessary
+        if( !is.factor(BY) ) BY <- factor(BY, levels=unique(BY))
+        s <- split(1:bydim, BY)
+        
+	}else s <- BY
     # build subset matrix
-    s <- split(1:bydim, BY)
     nm <- max(sapply(s, length))
     S <- matrix(0, nm, length(s))
     colnames(S) <- names(s)
@@ -159,29 +178,34 @@ applyBy.matrix <- function(x, BY, MARGIN, FUN, W=NULL, ..., DROP=FALSE){
     }
     
     # call relevant function from matrixStats
+	.FUN <- FUN
     if( MARGIN == 1L ){
         # prevent bug in matrixStats for row matrix: add dummy column
-        xmat <- if( nrow(x) == 1L ) rbind(x, 0)
-                else if( !nrow(x) ){ # early exit if empty input matrix
-                    x <- x[, 1:ncol(S), drop = FALSE]
-                    colnames(x) <- colnames(S)
-                    return(x)
-                } 
-                else x
+        xmat <- if( nrow(x) == 1L ){
+            .FUN <- function(x, ...) c(FUN(x[-nrow(x), , drop = FALSE], ...), NA)
+            rbind(x, 0)
+            }else if( !nrow(x) ){ # early exit if empty input matrix
+                  x <- x[, 1:ncol(S), drop = FALSE]
+                  colnames(x) <- colnames(S)
+                  return(x)
+              } 
+              else x
         # call
-        res <- rowAvgsPerColSet(X=xmat, S=S, FUN=FUN, W=W, ...)
+        res <- rowAvgsPerColSet(X=xmat, S=S, FUN=.FUN, W=W, ...)
         # remove dummy row
         if( nrow(x) == 1L ) res <- res[-nrow(res), , drop = FALSE]
     }else{
         # prevent bug in matrixStats for column matrix: add dummy column
-        xmat <- if( ncol(x) == 1L ) cbind(x, 0)
-                else if( !ncol(x) ){ # early exit if empty input matrix
+        xmat <- if( ncol(x) == 1L ){
+            .FUN <- function(x, ...) c(FUN(x[, -ncol(x), drop = FALSE], ...), NA)
+            cbind(x, 0)
+            }else if( !ncol(x) ){ # early exit if empty input matrix
                     x <- x[1:ncol(S), , drop = FALSE]
                     rownames(x) <- colnames(S)
                     return(x)
                 } else x 
         # call
-        res <- colAvgsPerRowSet(X=xmat, S=S, FUN=FUN, W=W, ...)
+        res <- colAvgsPerRowSet(X=xmat, S=S, FUN=.FUN, W=W, ...)
         # remove dummy column
         if( ncol(x) == 1L ) res <- res[, -ncol(res), drop = FALSE] 
     }
@@ -230,7 +254,7 @@ applyBy.matrix <- function(x, BY, MARGIN, FUN, W=NULL, ..., DROP=FALSE){
 #' In any case, the value of slot \code{annotation} (i.e. the annotation package), 
 #' is passed on to the result object.
 #'  
-#' @S3method applyBy ExpressionSet 
+#' @export 
 #' @rdname applyBy
 #' @examples
 #' 
@@ -259,7 +283,16 @@ applyBy.matrix <- function(x, BY, MARGIN, FUN, W=NULL, ..., DROP=FALSE){
 applyBy.ExpressionSet <- function(x, BY, MARGIN, ..., ANNOTATIONS=TRUE){
     
     # convert single character string into annotation variable
-    library(Biobase)
+    if( !requireNamespace('Biobase') ){
+      stop("Could not perform group-apply operation on ExpressionSet object: required package Biobase could not be loaded.")
+    }
+    # load Biobase functions
+    phenoData <- Biobase::phenoData
+    pData <- Biobase::pData
+    featureData <- Biobase::featureData
+    fData <- Biobase::fData
+    varLabels <- Biobase::varLabels
+
     if( isString(BY) ){
         if( MARGIN == 1L ){ # phenotypic variable
             if( !BY %in% varLabels(x) ){
@@ -279,7 +312,7 @@ applyBy.ExpressionSet <- function(x, BY, MARGIN, ..., ANNOTATIONS=TRUE){
     # apply to expression matrix
     .applyBy_BY(TRUE)
     on.exit( .applyBy_BY(NULL) )
-    res <- applyBy(exprs(x), BY=BY, MARGIN=MARGIN, ...)
+    res <- applyBy(Biobase::exprs(x), BY=BY, MARGIN=MARGIN, ...)
     
     # re-wrap into an ExpressionSet objects
     # pass on annotations whenever possible
@@ -291,16 +324,15 @@ applyBy.ExpressionSet <- function(x, BY, MARGIN, ..., ANNOTATIONS=TRUE){
             if( !is.list(BY) && nrow(ad <- phenoData(x)) > 0L ){
                 # get used BY factor
                 fBY <- .applyBy_BY()
-                # extract annotation for first representative of each level
-                irep <- match(colnames(res), as.character(fBY)) # order must match the item names
-                irep <- irep[!is.na(irep)]
-                if( length(irep) != ncol(res) ){
-                    warning("Could not collapse sample annotations: some level did not match the aggregated sample names")
-                }else{
-                    df <- pData(x)[irep, , drop = FALSE]
-                    rownames(df) <- colnames(res)
-                    pd <- AnnotatedDataFrame(df)	
-                }
+                new_margin_names <- colnames(res) 
+                # use annotation of first representative of each level
+                irep <- match(new_margin_names, as.character(fBY)) # order must match the item names
+                # force missing levels to get all NA annotations
+                irep[is.na(irep)] <- nrow(pData(x)) + 1L
+                df <- pData(x)[irep, , drop = FALSE]
+                # warp into an AnnotatedDataFrame object
+                rownames(df) <- new_margin_names
+                pd <- Biobase::AnnotatedDataFrame(df)
             }
         }else if( MARGIN == 2L ){
             if( nrow(ad <- phenoData(x)) > 0L ) pd <- ad # keep sample annotations
@@ -308,22 +340,21 @@ applyBy.ExpressionSet <- function(x, BY, MARGIN, ..., ANNOTATIONS=TRUE){
             if( !is.list(BY) && nrow(ad <- featureData(x)) > 0L ){
                 # get used BY factor
                 fBY <- .applyBy_BY()
-                # extract annotation for first representative of each level
-                irep <- match(rownames(res), as.character(fBY)) # order must match the item names
-                irep <- irep[!is.na(irep)]
-                if( length(irep) != nrow(res) ){
-                    warning("Could not collapse feature annotations: some level did not match the aggregated feature names")
-                }else{
-                    df <- fData(x)[irep, , drop = FALSE]
-                    rownames(df) <- rownames(res)
-                    fd <- AnnotatedDataFrame(df)
-                }
+                new_margin_names <- rownames(res)
+                # use annotation of first representative of each level
+                irep <- match(new_margin_names, as.character(fBY)) # order must match the item names
+                # force missing levels to get all NA annotations
+                irep[is.na(irep)] <- nrow(fData(x)) + 1L
+                df <- fData(x)[irep, , drop = FALSE]
+                # warp into an AnnotatedDataFrame object
+                rownames(df) <- new_margin_names
+                fd <- Biobase::AnnotatedDataFrame(df)
             }
         }
     }
     
     # do wrap
-    ca <- call('ExpressionSet', res, annotation=annotation(x))
+    ca <- call('ExpressionSet', res, annotation = Biobase::annotation(x))
     if( !is.null(pd) ) ca$phenoData <- pd
     if( !is.null(fd) ) ca$featureData <- fd
     res <- eval(ca)
@@ -331,7 +362,7 @@ applyBy.ExpressionSet <- function(x, BY, MARGIN, ..., ANNOTATIONS=TRUE){
     res
 }
 
-#' @S3method applyBy numeric
+#' @export
 #' @rdname applyBy
 #' @examples
 #' 
@@ -355,7 +386,7 @@ applyBy.numeric <- function(x, BY, MARGIN, ...){
     if( MARGIN == 1L ){ 
         applyBy(matrix(x, nrow = 1L), BY = BY, MARGIN = MARGIN, ...)
     }else{
-        applyBy(as.matrix(x), BY = BY, MARGIN = MARGIN, ...)
+        applyBy(matrix(x, ncol = 1L), BY = BY, MARGIN = MARGIN, ...)
     }
 }
 
@@ -375,56 +406,3 @@ rowApplyBy <- function(x, BY, FUN, ...){
 colApplyBy <- function(x, BY, FUN, ...){ 
     applyBy(x, BY=BY, MARGIN=2L, FUN=FUN, ...)
 }
-
-
-
-# generator functions
-.rowApplyByFunction <- function(FUN){
-    function(x, BY, ...){
-        applyBy(x, BY=BY, MARGIN=1L, FUN=FUN, ...)
-    }
-}
-.colApplyByFunction <- function(FUN){
-    function(x, BY, ...){
-        applyBy(x, BY=BY, MARGIN=2L, FUN=FUN, ...)
-    }
-}
-
-#' \code{col<STAT>By} computes for each column a given statistic within separate groups of rows, which are defined by a factor.
-#' @export
-#' @rdname applyBy
-colSumsBy <- .colApplyByFunction(colSums)
-
-#' \code{row<STAT>By} computes for each row a given statistic within separate groups of columns, which are defined by a factor.
-#' @export
-#' @rdname applyBy
-rowSumsBy <- .rowApplyByFunction(rowSums)
-
-#' @export
-#' @rdname applyBy
-rowMeansBy <- .rowApplyByFunction(rowMeans)
-#' @export
-#' @rdname applyBy
-colMeansBy <- .colApplyByFunction(colMeans)
-
-#' @export
-#' @rdname applyBy
-rowMediansBy <- .rowApplyByFunction(matrixStats::rowMedians)
-#' @export
-#' @rdname applyBy
-colMediansBy <- .colApplyByFunction(matrixStats::colMedians)
-
-#' @export
-#' @rdname applyBy
-rowMaxsBy <- .rowApplyByFunction(matrixStats::rowMaxs)
-#' @export
-#' @rdname applyBy
-colMaxsBy <- .colApplyByFunction(matrixStats::colMaxs)
-
-#' @export
-#' @rdname applyBy
-rowMinsBy <- .rowApplyByFunction(matrixStats::rowMins)
-#' @export
-#' @rdname applyBy
-colMinsBy <- .colApplyByFunction(matrixStats::colMins)
-
