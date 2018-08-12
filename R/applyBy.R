@@ -354,7 +354,7 @@ applyBy.ExpressionSet <- function(x, BY, MARGIN, ..., ANNOTATIONS=TRUE){
     }
     
     # do wrap
-    ca <- call('ExpressionSet', res, annotation = Biobase::annotation(x))
+    ca <- call('ExpressionSet', res, annotation = Biobase::annotation(x), experimentData = Biobase::experimentData(x))
     if( !is.null(pd) ) ca$phenoData <- pd
     if( !is.null(fd) ) ca$featureData <- fd
     res <- eval(ca)
